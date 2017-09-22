@@ -1,0 +1,25 @@
+{
+  "name": "up-botlibre",
+  "version": "1.0.0",
+  "description": "tool for automagically uploading scripts to a botlibre bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/mosbuma/up-botlibre.git"
+  },
+  "keywords": [
+    "botlibre",
+    "upload",
+    "aiml",
+    "self"
+  ],
+  "author": "Marc Buma",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mosbuma/up-botlibre/issues"
+  },
+  "homepage": "https://github.com/mosbuma/up-botlibre#readme"
+}
