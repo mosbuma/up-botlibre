@@ -393,7 +393,6 @@ botlibreAPI.prototype.saveBotScript = function(script, aiml) {
 
     url='http://www.botlibre.com/rest/api/save-bot-script-source'
     return this.POST(url, scriptSource).then(result=> {
-      console.log('result: '+ JSON.stringify(result))
       if(result!="") {
         console.log('DEBUG: saveBotScript - unable to save script-source');
         return false;

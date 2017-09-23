@@ -14,9 +14,14 @@ var conversation_id = null; // given by bot after first message
 // tools & utils
 var Reset = "\x1b[0m"; // https://stackoverflow.com/questions/9781218/how-to-change-node-jss-console-font-color
 var Bright = "\x1b[1m";
+var Dim = "\x1b[2m"
 var Reverse = "\x1b[7m";
 
-console.log('Monitoring files in directory ' + monitorConfig.directory);
+var logprogress = message => {
+  console.log(Dim + message + Reset);
+}
+
+logprogress('Monitoring files in directory ' + monitorConfig.directory);
 watch.createMonitor(monitorConfig.directory, function (monitor) {
   // monitor.files['/home/mikeal/.zshrc'] // Stat object for my zshrc.
   monitor.on("created", function (f, stat) {
@@ -39,9 +44,9 @@ var stdin = process.openStdin();
 var API = new botlibreAPI();
 API.login(botlibreConfig.appid, botlibreConfig.user, botlibreConfig.password, botlibreConfig.botid).then(result => {
   if(!result) {
-    console.log('ERROR: unable to login to botlibre API');
+    logprogress('ERROR: unable to login to botlibre API');
   } else {
-    console.log('Bot at your service!')
+    logprogress('Bot at your service!')
   }
 });
 
@@ -61,7 +66,7 @@ stdin.addListener("data", function(d) {
           conversation_id = response.conversation;
         }
       } else {
-        console.log('ERROR: unable to chat with the bot');
+        logprogress('ERROR: unable to chat with the bot');
       };
     })
   }
@@ -78,7 +83,7 @@ var processcommand = command => {
           API.getBotScripts(instance).then(list => {
             if(false!=list) {
               for(var i=0;i<list.length;i++) {
-                console.log(list[i].name);
+                logprogress(list[i].name);
               }
             }
           });
@@ -91,22 +96,22 @@ var processcommand = command => {
       console.log('delete ' + items[1]);
       API.deleteBotScript(items[1]).then(result => {
         if(false!=result) {
-          console.log('script ' + items[1] + ' deleted');
+          logprogress('script ' + items[1] + ' deleted');
         } else {
-          console.log('ERROR: unable to delete script ' + items[1]);
+          logprogress('ERROR: unable to delete script ' + items[1]);
         }
       });
       break;
     case 'reset':
       conversation_id=null;
-      console.log('>>> conversation has been reset!')
+      logprogress('conversation has been reset!')
       break;
     default:
-      console.log('valid commands are:')
-      console.log('  !reset -> forget conversation')
-      console.log('  !up -> upload all scripts')
-      console.log('  !list -> show names of all scripts')
-      console.log('  !delete <scriptname> -> delete script with given name')
+      logprogress('valid commands are:')
+      logprogress('  !reset -> forget conversation')
+//      console.log('  !up -> upload all scripts')
+      logprogress('  !list -> show names of all scripts')
+      logprogress('  !delete <scriptname> -> delete script with given name')
       break;
   }
 }
@@ -116,19 +121,18 @@ var getBasename = filename => {
 }
 
 var upload_script = filename => {
-  console.log('uploading ' + filename);
   fs.readFile(filename, 'UTF-8', (err, data) => {
       if (err) {
-        console.log('ERROR: unable to open ' + filename + '(' + err + ')');
+        logprogress('ERROR: unable to open ' + filename + '(' + err + ')');
         return false ;
       }
 
      var basename = getBasename(filename)
-     console.log('saving to bot script ' + basename);
+     logprogress('updating bot script ' + basename + ' from ' + filename);
       return API.upsertBotScript(basename, data).then(source=>{
-        var XMLSerializer = require('xmldom').XMLSerializer
-        var xml = new XMLSerializer().serializeToString(source);
-        console.log(xml);
+        // var XMLSerializer = require('xmldom').XMLSerializer
+        // var xml = new XMLSerializer().serializeToString(source);
+        // console.log(xml);
 
         return source;
       });
@@ -137,7 +141,7 @@ var upload_script = filename => {
 
 var delete_script = filename => {
   var basename = getBasename(filename)
-  console.log('deleting  bot script' + basename);
+  logprogress('deleting  bot script' + basename);
 
   API.deleteBotScript(basename);
 }

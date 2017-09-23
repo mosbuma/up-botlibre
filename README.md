@@ -13,6 +13,8 @@
 #  4. start with node index.js from the root folder
 #  5. Happy AIML-ing
 
+# type ! to get an overview of the available commands
+
 # Todo
 # - full sync of  files with botlibre by implementing a !sync command
 # - download of botlibre scripts that are not available locally
