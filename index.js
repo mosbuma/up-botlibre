@@ -3,8 +3,10 @@ var botlibreapi = require('./botlibre-api.js')
 var fs = require('fs')
 var config = require('config');
 var path = require('path');
+var fs = require('fs');
 
 var watch = require('watch')
+var gWatchIgnorefile = ''; // do not respond to events regarding this file (used during download from botlibre);
 
 var botlibreConfig = config.get('botlibre');
 var monitorConfig = config.get('monitor');
@@ -25,16 +27,49 @@ logprogress('Monitoring files in directory ' + monitorConfig.directory);
 watch.createMonitor(monitorConfig.directory, function (monitor) {
   // monitor.files['/home/mikeal/.zshrc'] // Stat object for my zshrc.
   monitor.on("created", function (f, stat) {
+
+    if(f==gWatchIgnorefile) {
+      // logprogress('ignored new file ' + f);
+      gWatchIgnorefile = ""
+      return;
+    }
     // Handle new files
-    upload_script(f);
+    var scriptname = getBasename(f);
+    upload_script(f, scriptname).then(result => {
+      if(false!=result) {
+        logprogress('OK: script ' + scriptname + ' uploaded from file' + fullname);
+      } else {
+        logprogress('ERROR: unable to upload script ' + scriptname);
+      };
+    })
   })
   monitor.on("changed", function (f, curr, prev) {
+    if(f==gWatchIgnorefile) {
+      // logprogress('ignored changes to ' + f);
+      gWatchIgnorefile = ""
+      return;
+    }
+
     // Handle file changes
-    upload_script(f);
+    var scriptname = getBasename(f);
+    upload_script(f, scriptname).then(result => {
+      if(false!=result) {
+        logprogress('OK: script ' + scriptname + ' uploaded from file' + f);
+      } else {
+        logprogress('ERROR: unable to upload script ' + scriptname);
+      };
+    })
   })
   monitor.on("removed", function (f, stat) {
+    logprogress('removed: watch file is ' + gWatchIgnorefile + ' vs ' + f );
+    if(f==gWatchIgnorefile) {
+      // gWatchIgnorefile = ""
+      return;
+    }
+
     // Handle removed files
-    delete_script(f);
+    // delete_script(f);
+    logprogress("File " + f + "has been deleted. Use !delete to remove the file at botlibre manually");
   })
   // monitor.stop(); // Stop watching
 })
@@ -75,12 +110,11 @@ stdin.addListener("data", function(d) {
 var processcommand = command => {
   var items = command.split(' ');
   switch(items[0]) {
-    case 'up':
-      break;
     case 'list':
       API.getInstance().then(instance=>{
         if(false!=instance) {
           API.getBotScripts(instance).then(list => {
+            logprogress('Scripts @ botlibre:');
             if(false!=list) {
               for(var i=0;i<list.length;i++) {
                 logprogress(list[i].name);
@@ -89,16 +123,53 @@ var processcommand = command => {
           });
         };
       })
-
-      break;
+  break;
     case 'delete':
     case 'del':
-      console.log('delete ' + items[1]);
+      if(items.length<2) return;
+      logprogress('delete ' + items[1]);
       API.deleteBotScript(items[1]).then(result => {
         if(false!=result) {
           logprogress('script ' + items[1] + ' deleted');
         } else {
           logprogress('ERROR: unable to delete script ' + items[1]);
+        }
+      });
+      break;
+    case 'download':
+    case 'down':
+      if(items.length!=2) {
+        logprogress("usage !down[load] scriptname [whitespace is not allowed in the scriptname]");
+        return;
+      }
+
+      var scriptname = items[1];
+      var target = path.join(monitorConfig.directory, scriptname + '.aiml');
+
+      download_script(scriptname, target).then(result => {
+        if(false!=result) {
+          logprogress('script ' + scriptname + ' downloaded to file ' + target);
+        } else {
+          logprogress('ERROR: unable to download script ' + scriptname);
+        }
+      });
+
+      break;
+    case 'up':
+    case 'upload':
+      if(items.length!=2) {
+        logprogress("usage !up(load) filename [whitespace is not allowed in the filename]");
+        return;
+      }
+
+      var fullname = path.join(monitorConfig.directory, items[1]);
+      var scriptname = getBasename(fullname);
+
+      upload_script(fullname, scriptname).then(result => {
+        if(false!=result) {
+          logprogress('script ' + scriptname + ' uploaded from file' + fullname);
+        } else {
+          logprogress('ERROR: unable to upload script ' + scriptname);
         }
       });
       break;
@@ -108,10 +179,11 @@ var processcommand = command => {
       break;
     default:
       logprogress('valid commands are:')
-      logprogress('  !reset -> forget conversation')
-//      console.log('  !up -> upload all scripts')
       logprogress('  !list -> show names of all scripts')
-      logprogress('  !delete <scriptname> -> delete script with given name')
+      logprogress('  !reset -> forget conversation')
+      logprogress('  !down[upload] <filename> -> download script from botlibre')
+      logprogress('  !up[load] <filename> -> upload script to botlibre')
+      logprogress('  !delete <scriptname> -> delete script with given name at botlibre')
       break;
   }
 }
@@ -120,22 +192,63 @@ var getBasename = filename => {
   return path.basename(filename, path.extname(filename)).replace(/ /g, '_');
 }
 
-var upload_script = filename => {
-  fs.readFile(filename, 'UTF-8', (err, data) => {
-      if (err) {
-        logprogress('ERROR: unable to open ' + filename + '(' + err + ')');
-        return false ;
-      }
+var upload_script = (fullname) => {
+  var scriptname = getBasename(fullname)
 
-     var basename = getBasename(filename)
-     logprogress('updating bot script ' + basename + ' from ' + filename);
-      return API.upsertBotScript(basename, data).then(source=>{
-        // var XMLSerializer = require('xmldom').XMLSerializer
-        // var xml = new XMLSerializer().serializeToString(source);
-        // console.log(xml);
+  return new Promise(function(resolve, reject) {
+    fs.readFile(fullname, 'UTF-8', (err, data) => {
+        if (err) {
+          logprogress('ERROR: unable to open ' + fullname + '(' + err + ')');
+          reject(err);
+        } else {
+          resolve(data);
+        }
+    });
+  }).then(result=>{
+     return API.upsertBotScript(scriptname, result);
+  }).then(source=>{
+    if(false==source) {
+      return false;
+    } else {
+      return true;
+    }
+  }).catch(error => {
+    console.log('ERROR: unable to upload botscript ' + scriptname +' - ' + error);
+    return false;
+  });
+}
 
-        return source;
+var download_script = (scriptname, targetname) => {
+  gWatchIgnorefile = targetname;
+
+  return API.getBotScript(scriptname).then(response=>{
+    if(false==response) {
+      logprogress('ERROR: unable to get botscript ' + scriptname);
+    };
+    return response;
+  }).then(botScript=> {
+    return API.getBotScriptSource(botScript);
+  }).then(source=>{
+    if(false==source) {
+      logprogress('ERROR: download_scipt - unable to get bot script ' + scriptname);
+      return false;
+    }
+    aiml = source.documentElement.getElementsByTagName("source")[0].childNodes[0].nodeValue;
+
+    return new Promise(function(resolve, reject) {
+      fs.writeFile(targetname, aiml, function(err) {
+          if (err) {
+            logprogress('ERROR: unable to write botscript ' + scriptname);
+            reject(err);
+          } else {
+            logprogress('Botscript ' + scriptname + ' was saved as ' + targetname);
+            resolve(true);
+          }
       });
+    })
+  }).catch(error => {
+    console.log('ERROR: unable to write botscript ' + scriptname +'- ' + error);
+    return false;
   });
 }
 
