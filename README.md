@@ -1,7 +1,7 @@
 # up-botlibre
 
 up-botlibre is a tool that facilitates development of bot scripts on the bot-libre platform
--you can use your favorite text editor to edit the AIML scripts
+- you can use your favorite text editor to edit the AIML scripts
 - up-botlibre monitors a folder with AIML files and uploads changed files to botlibre-api
 - you can talk to the bot using the app's cli interface
 - also there are some commands to list the bot's scripts and delete scripts from the bot
