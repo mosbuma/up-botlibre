@@ -83,6 +83,17 @@ API.login(botlibreConfig.appid, botlibreConfig.user, botlibreConfig.password, bo
   } else {
     logprogress('Bot at your service!')
   }
+}).then(result=>{
+  return !API.chatWithBot('intro').then(response=> {
+    if(false!=response) {
+      console.log(Bright+response.message+Reset);
+      if(response.conversation) {
+        conversation_id = response.conversation;
+      }
+    } else {
+      logprogress('ERROR: unable to chat with the bot');
+    };
+  })
 });
 
 stdin.addListener("data", function(d) {
@@ -122,7 +133,10 @@ var processcommand = command => {
             }
           });
         };
-      })
+      }).catch(error => {
+        console.log('ERROR: botlibreAPI.list - ' + error);
+        return false;
+      });
   break;
     case 'delete':
     case 'del':
@@ -176,6 +190,18 @@ var processcommand = command => {
     case 'reset':
       conversation_id=null;
       logprogress('conversation has been reset!')
+
+      API.chatWithBot('intro').then(response=> {
+        if(false!=response) {
+          console.log(Bright+response.message+Reset);
+          if(response.conversation) {
+            conversation_id = response.conversation;
+          }
+        } else {
+          logprogress('ERROR: unable to chat with the bot');
+        };
+      })
+
       break;
     default:
       logprogress('valid commands are:')

@@ -53,13 +53,12 @@ botlibreAPI.prototype.POST = function(url, document) {
 
   var XMLSerializer = require('xmldom').XMLSerializer
   var xml = new XMLSerializer().serializeToString(document);
-  // console.log(JSON.stringify(xml));
 
   axios.defaults.headers.post['Content-Type']='application/xml';
   return axios.post(url, xml).then(function(response) {
     return response.data;
   }.bind(this)).catch(error => {
-    console.log('ERROR: botlibreAPI.POST - ' + error);
+    console.log('ERROR: botlibreAPI.POST - ' + error.response.data + ' [' + error.response.status + ']');
     return false;
   });
 }
@@ -97,7 +96,7 @@ botlibreAPI.prototype.chatWithBot = function(message, opt_conversation) {
     var data = {'message':reply, 'conversation':conversation };
     return data;
   }).catch(error => {
-    console.log('ERROR: botlibreAPI.chatWithBot - ' + error);
+    console.log('ERROR: botlibreAPI.chatWithBot - ' +  error.response.data + '[' + error.response.status + ']');
     return false;
   });
 }
