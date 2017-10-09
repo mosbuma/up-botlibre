@@ -499,6 +499,42 @@ botlibreAPI.prototype.deleteBotScript = function(scriptName) {
   });
 }
 
+botlibreAPI.prototype.priorityBotScript = function(priorityUp, scriptName) {
+  var url = 'http://www.botlibre.com/rest/api/up-bot-script';
+  if(!priorityUp) {
+    url = 'http://www.botlibre.com/rest/api/down-bot-script';
+  }
+
+  return this.getBotScript(scriptName).then(function(script) {
+    if(script==false) {
+      console.log('ERROR: botlibreAPI.priorityBotScript - unable to get bot-script ' + scriptName);
+      return false;
+    }
+
+    return this.getBotScriptSource(script).then(scriptSource=>{
+      console.log(scriptName);
+      if(scriptSource==false) {
+        console.log('ERROR: botlibreAPI.priorityBotScript - unable to get bot-script-source for ' + scriptName);
+        return false;
+      }
+
+      var scriptid=script.documentElement.getAttribute('id');
+      this.addCredentials(scriptSource);
+
+      return this.POST(url, scriptSource).then(result => {
+        if(result!="") {
+          console.log('ERROR: botlibreAPI.priorityBotScript - unable to up priority for bot-script ' + scriptName);
+        }
+
+        return (result=="");
+      });
+    });
+  }.bind(this)).catch(error => {
+    console.log('ERROR: botlibreAPI.priorityBotScript - last resort error ' + error);
+    return false;
+  });
+}
+
 // duration: week / day
 botlibreAPI.prototype.getConversations = function(duration) {
   var url = 'http://www.botlibre.com/rest/api/get-conversations';

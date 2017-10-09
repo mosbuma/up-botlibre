@@ -80,21 +80,30 @@ var API = new botlibreAPI();
 API.login(botlibreConfig.appid, botlibreConfig.user, botlibreConfig.password, botlibreConfig.botid).then(result => {
   if(!result) {
     logprogress('ERROR: unable to login to botlibre API');
-  } else {
-    logprogress('Bot at your service!')
+    return result
   }
+
+  return API.getInstance();
 }).then(result=>{
-  return !API.chatWithBot('intro').then(response=> {
-    if(false!=response) {
-      console.log(Bright+response.message+Reset);
-      if(response.conversation) {
-        conversation_id = response.conversation;
-      }
-    } else {
-      logprogress('ERROR: unable to chat with the bot');
-    };
-  })
-});
+  if(!result) {
+    logprogress('ERROR: unable to get bot instance');
+    return result
+  }
+
+  var name = result.documentElement.getAttribute("name");
+  logprogress(name + ' at your service!')
+
+  return API.chatWithBot('intro')
+}).then(response=> {
+  if(!response) {
+    logprogress('ERROR: unable to chat with the bot');
+  };
+
+  console.log(Bright+response.message+Reset);
+  if(response.conversation) {
+    conversation_id = response.conversation;
+  }
+})
 
 stdin.addListener("data", function(d) {
   // note:  d is an object, and when converted to a string it will
@@ -147,6 +156,23 @@ var processcommand = command => {
           logprogress('script ' + items[1] + ' deleted');
         } else {
           logprogress('ERROR: unable to delete script ' + items[1]);
+        }
+      });
+      break;
+    case 'priority':
+    case 'prio':
+      if(items.length<3) return;
+      if(items[1]!='up' && items[1]!='down') {
+        logprogress("usage !prio[rity] up|down scriptname [whitespace is not allowed in the scriptname]");
+        return;
+      }
+
+      logprogress('priority ' + items[1] + ' ' + items[2]);
+      API.priorityBotScript(items[1]=='up', items[2]).then(result => {
+        if(false!=result) {
+          logprogress('script %s moved %s', items[1], items[2]);
+        } else {
+          logprogress('ERROR: unable to change priority %s for script %s ', items[1], items[2]);
         }
       });
       break;
