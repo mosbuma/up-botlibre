@@ -3,7 +3,8 @@
     "user": "<botlibre username>",
     "password": "<botlibre password>",
     "appid":  "<botlibre app id>",
-    "botid":  "<botlibre bot id>"
+    "botid":  "<botlibre bot id>",
+    "baseurl": "< http://www.botlibre.biz or http://www.botlibre.com >"
   },
   "monitor": {
     "directory": "<absolute path to root folder with bot files that are monitored and uploaded>"

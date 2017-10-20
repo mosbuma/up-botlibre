@@ -76,7 +76,7 @@ watch.createMonitor(monitorConfig.directory, function (monitor) {
 
 var stdin = process.openStdin();
 
-var API = new botlibreAPI();
+var API = new botlibreAPI(botlibreConfig.baseurl);
 API.login(botlibreConfig.appid, botlibreConfig.user, botlibreConfig.password, botlibreConfig.botid).then(result => {
   if(!result) {
     logprogress('ERROR: unable to login to botlibre API');
@@ -170,7 +170,7 @@ var processcommand = command => {
       logprogress('priority ' + items[1] + ' ' + items[2]);
       API.priorityBotScript(items[1]=='up', items[2]).then(result => {
         if(false!=result) {
-          logprogress('script %s moved %s', items[1], items[2]);
+          logprogress('script ' + items[2] + ' moved ' + items[1]);
         } else {
           logprogress('ERROR: unable to change priority %s for script %s ', items[1], items[2]);
         }

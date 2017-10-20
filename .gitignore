@@ -1,6 +1,8 @@
 config/default.json
+config/accountmarc.json
+config/accountproductie.json
 npm-debug.log
 
 node_modules
 
-bots 
+bots

@@ -11,15 +11,16 @@
 
 const axios = require("axios");
 
-botlibreAPI = function(username, password, appid, botid) {
+botlibreAPI = function(baseurl) {
   this.user;
   this.appid;
   this.token;
   this.botid;
+  this.baseurl = baseurl + '/rest/api/';
 }
 
 botlibreAPI.prototype.login = function(applicationid, username, password, botid) {
-  var url = 'http://www.botlibre.com/rest/api/form-check-user?user='+username+'&password='+password+'&applicationid='+applicationid;
+  var url = this.baseurl + 'form-check-user?user='+username+'&password='+password+'&applicationid='+applicationid;
 
   return axios({
     method: 'get',
@@ -64,7 +65,7 @@ botlibreAPI.prototype.POST = function(url, document) {
 }
 
 botlibreAPI.prototype.chatWithBot = function(message, opt_conversation) {
-  var url = 'http://www.botlibre.com/rest/api/chat';
+  var url = this.baseurl + 'chat';
 
   var DOMImplementation = require('xmldom').DOMImplementation
   var document = new DOMImplementation().createDocument(null, "chat");
@@ -102,7 +103,7 @@ botlibreAPI.prototype.chatWithBot = function(message, opt_conversation) {
 }
 
 botlibreAPI.prototype.getInstances = function() {
-  var url = 'http://www.botlibre.com/rest/api/get-instances';
+  var url = this.baseurl + 'get-instances';
 
   var DOMImplementation = require('xmldom').DOMImplementation
   var document = new DOMImplementation().createDocument(null, "browse");
@@ -130,7 +131,7 @@ botlibreAPI.prototype.getInstances = function() {
 }
 
 botlibreAPI.prototype.getInstance = function() {
-  var url = 'http://www.botlibre.com/rest/api/check-instance';
+  var url = this.baseurl + 'check-instance';
 
   var DOMImplementation = require('xmldom').DOMImplementation
   var document = new DOMImplementation().createDocument(null, "instance");
@@ -148,7 +149,7 @@ botlibreAPI.prototype.getInstance = function() {
 }
 
 botlibreAPI.prototype.getLibraryScripts = function() {
-  var url = 'http://www.botlibre.com/rest/api/get-scripts';
+  var url = this.baseurl + 'get-scripts';
 
   var DOMImplementation = require('xmldom').DOMImplementation
   var document = new DOMImplementation().createDocument(null, "browse");
@@ -178,7 +179,7 @@ botlibreAPI.prototype.getLibraryScripts = function() {
 }
 
 botlibreAPI.prototype.getBotScripts = function(instance) {
-  var url = 'http://www.botlibre.com/rest/api/get-bot-scripts';
+  var url = this.baseurl + 'get-bot-scripts';
 
   this.addCredentials(instance);
   return this.POST(url, instance).then(scriptConfig=>{
@@ -202,7 +203,7 @@ botlibreAPI.prototype.getBotScripts = function(instance) {
 
 // NB: for now, only looks for scripts owned by the logged in user!
 botlibreAPI.prototype.getLibraryScript = function(scriptname) {
-  var url = 'http://www.botlibre.com/rest/api/get-scripts';
+  var url = this.baseurl + 'get-scripts';
 
   var DOMImplementation = require('xmldom').DOMImplementation
   var document = new DOMImplementation().createDocument(null, "browse");
@@ -237,7 +238,7 @@ botlibreAPI.prototype.getLibraryScript = function(scriptname) {
 }
 
 botlibreAPI.prototype.createLibraryScript = function(name, language) { // , source
-  var url = 'http://www.botlibre.com/rest/api/create-script';
+  var url = this.baseurl + 'create-script';
 
   var DOMImplementation = require('xmldom').DOMImplementation
   var document = new DOMImplementation().createDocument(null, "script");
@@ -259,7 +260,7 @@ botlibreAPI.prototype.createLibraryScript = function(name, language) { // , sour
 
 // Remove the script with the given name from the current bot
 botlibreAPI.prototype.deleteLibraryScript = function(script) {
-  var url = 'http://www.botlibre.com/rest/api/delete-script';
+  var url = this.baseurl + 'delete-script';
 
   this.addCredentials(script);
   return this.POST(url, script).then(function(result) {
@@ -280,7 +281,7 @@ botlibreAPI.prototype.getBotScript = function(scriptname) {
 
     return botInstance;
   }.bind(this)).then(function(botInstance) {
-    var url = 'http://www.botlibre.com/rest/api/get-bot-scripts';
+    var url = this.baseurl + 'get-bot-scripts';
 
     this.addCredentials(botInstance);
     return this.POST(url, botInstance).then(function (scriptConfig) {
@@ -308,7 +309,7 @@ botlibreAPI.prototype.getBotScript = function(scriptname) {
 }
 
 botlibreAPI.prototype.getLibraryScriptSource = function(script) {
-  var url = 'http://www.botlibre.com/rest/api/get-script-source';
+  var url = this.baseurl + 'get-script-source';
   this.addCredentials(script);
   return this.POST(url, script).then(scriptSource=>{
     var DOMParser = require('xmldom').DOMParser;
@@ -321,7 +322,7 @@ botlibreAPI.prototype.getLibraryScriptSource = function(script) {
 }
 
 botlibreAPI.prototype.getBotScriptSource = function(script) {
-  var url = 'http://www.botlibre.com/rest/api/get-bot-script-source';
+  var url = this.baseurl + 'get-bot-script-source';
 
   var scriptId = script.documentElement.getAttribute("id");
 
@@ -358,7 +359,7 @@ botlibreAPI.prototype.saveLibraryScript = function(script, aiml) {
     scriptSource.documentElement.setAttribute('instance', scriptid);
     this.addCredentials(scriptSource);
 
-    url='http://www.botlibre.com/rest/api/save-script-source'
+    url=this.baseurl + 'save-script-source'
     return this.POST(url, scriptSource).then(result=> {
       if(result==false) {
         console.log('DEBUG: saveLibaryScript - unable to save script-source');
@@ -390,7 +391,7 @@ botlibreAPI.prototype.saveBotScript = function(script, aiml) {
     // scriptSource.documentElement.setAttribute('instance', scriptid);
     this.addCredentials(scriptSource);
 
-    url='http://www.botlibre.com/rest/api/save-bot-script-source'
+    url=this.baseurl + 'save-bot-script-source'
     return this.POST(url, scriptSource).then(result=> {
       if(result!="") {
         console.log('DEBUG: saveBotScript - unable to save script-source');
@@ -427,13 +428,12 @@ botlibreAPI.prototype.upsertBotScript = function(name, aiml) {
 
       this.addCredentials(document);
 
-      var url = 'http://www.botlibre.com/rest/api/save-bot-script-source';
+      var url = this.baseurl + 'save-bot-script-source';
       return this.POST(url, document).then(result=>{
         if(""!=result) {
           console.log('ERROR: botlibreAPI.upsertBotScript - unable to create new botscript ' + name);
           return false;
         } else {
-          console.log('retrieve botscript after create')
           return this.getBotScript(name)
         }
       }).then(result => {
@@ -467,7 +467,7 @@ botlibreAPI.prototype.upsertBotScript = function(name, aiml) {
 }
 
 botlibreAPI.prototype.deleteBotScript = function(scriptName) {
-  var url = 'http://www.botlibre.com/rest/api/delete-bot-script';
+  var url = this.baseurl + 'delete-bot-script';
 
   return this.getBotScript(scriptName).then(function(script) {
     if(script==false) {
@@ -476,13 +476,11 @@ botlibreAPI.prototype.deleteBotScript = function(scriptName) {
     }
 
     return this.getBotScriptSource(script).then(scriptSource=>{
-      console.log(scriptName);
       if(scriptSource==false) {
         console.log('ERROR: botlibreAPI.deleteBotScript - unable to get bot-script-source for ' + scriptName);
         return false;
       }
 
-      var scriptid=script.documentElement.getAttribute('id');
       this.addCredentials(scriptSource);
 
       return this.POST(url, scriptSource).then(result => {
@@ -500,9 +498,9 @@ botlibreAPI.prototype.deleteBotScript = function(scriptName) {
 }
 
 botlibreAPI.prototype.priorityBotScript = function(priorityUp, scriptName) {
-  var url = 'http://www.botlibre.com/rest/api/up-bot-script';
+  var url = this.baseurl + 'up-bot-script';
   if(!priorityUp) {
-    url = 'http://www.botlibre.com/rest/api/down-bot-script';
+    url = this.baseurl + 'down-bot-script';
   }
 
   return this.getBotScript(scriptName).then(function(script) {
@@ -512,13 +510,11 @@ botlibreAPI.prototype.priorityBotScript = function(priorityUp, scriptName) {
     }
 
     return this.getBotScriptSource(script).then(scriptSource=>{
-      console.log(scriptName);
       if(scriptSource==false) {
         console.log('ERROR: botlibreAPI.priorityBotScript - unable to get bot-script-source for ' + scriptName);
         return false;
       }
 
-      var scriptid=script.documentElement.getAttribute('id');
       this.addCredentials(scriptSource);
 
       return this.POST(url, scriptSource).then(result => {
@@ -537,7 +533,7 @@ botlibreAPI.prototype.priorityBotScript = function(priorityUp, scriptName) {
 
 // duration: week / day
 botlibreAPI.prototype.getConversations = function(duration) {
-  var url = 'http://www.botlibre.com/rest/api/get-conversations';
+  var url = this.baseurl + 'get-conversations';
 
   var DOMImplementation = require('xmldom').DOMImplementation
   var document = new DOMImplementation().createDocument(null, "response-search");
@@ -588,7 +584,7 @@ botlibreAPI.prototype.getConversations = function(duration) {
 }
 
 // botlibreAPI.prototype.importBotScript = function(script) {
-//   var url = 'http://www.botlibre.com/rest/api/import-bot-script';
+//   var url = this.baseurl + 'import-bot-script';
 //   this.addCredentials(script);
 //   script.getRootElement().setAttribute('instance', this.botid);
 //
