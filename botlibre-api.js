@@ -139,6 +139,11 @@ botlibreAPI.prototype.getInstance = function() {
   this.addCredentials(document);
 
   return this.POST(url, document).then(result=>{
+    if(!result) {
+      console.log('ERROR: botlibreAPI.getInstances - unable to post to botlibre');
+      return false;
+    }
+
     var DOMParser = require('xmldom').DOMParser;
     var document2 = new DOMParser().parseFromString(result);
     return document2;

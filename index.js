@@ -97,6 +97,7 @@ API.login(botlibreConfig.appid, botlibreConfig.user, botlibreConfig.password, bo
 }).then(response=> {
   if(!response) {
     logprogress('ERROR: unable to chat with the bot');
+    return response;
   };
 
   console.log(Bright+response.message+Reset);
@@ -229,6 +230,9 @@ var processcommand = command => {
       })
 
       break;
+    case 'stats':
+      bot_status();
+      break;
     default:
       logprogress('valid commands are:')
       logprogress('  !list -> show names of all scripts')
@@ -309,4 +313,17 @@ var delete_script = filename => {
   logprogress('deleting  bot script' + basename);
 
   API.deleteBotScript(basename);
+}
+
+var bot_status = () => {
+  logprogress('getting bot instance statistics');
+  API.getInstance().then(response=>{
+    if(false!=response) {
+      var XMLSerializer = require('xmldom').XMLSerializer
+      var xml = new XMLSerializer().serializeToString(response);
+      console.log(xml);
+    } else {
+      console.log('ERROR: unable to get instance');
+    };
+  })
 }
