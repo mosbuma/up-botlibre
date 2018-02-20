@@ -240,6 +240,7 @@ var processcommand = command => {
       logprogress('  !down[upload] <filename> -> download script from botlibre')
       logprogress('  !up[load] <filename> -> upload script to botlibre')
       logprogress('  !delete <scriptname> -> delete script with given name at botlibre')
+      logprogress('  !prio[rity] up|down scriptname -> move script up/down in list at botlibre')
       break;
   }
 }
