@@ -196,6 +196,49 @@ var processcommand = command => {
       });
 
       break;
+      case 'all':
+        if(items.length!=2||(items[1]!='down'&&items[1]!='up')) {
+          logprogress("usage !all down");
+          return;
+        }
+
+        API.getInstance().then(instance=>{
+          if(false!=instance) {
+            API.getBotScripts(instance).then(list => {
+              if(false!=list) {
+                for(var i=0;i<list.length;i++) {
+                  var scriptname = list[i].name;
+                  var target = path.join(monitorConfig.directory, scriptname + '.aiml');
+
+                  switch(items[1]) {
+                    // case 'up':
+                    //   logprogress("uploading "+list[i].name);
+                    //   break;
+                    case 'down':
+                      logprogress("downloading "+list[i].name + ' to ' + target);
+
+                      download_script(scriptname, target).then(result => {
+                        if(false!=result) {
+                          logprogress('script ' + scriptname + ' downloaded to file ' + target);
+                        } else {
+                          logprogress('ERROR: unable to download script ' + scriptname);
+                        }
+                      });
+
+                      break;
+                  }
+                }
+              }
+            });
+          };
+        }).catch(error => {
+          console.log('ERROR: botlibreAPI.list - ' + error);
+          return false;
+        });
+
+
+
+        break;
     case 'up':
     case 'upload':
       if(items.length!=2) {
@@ -239,6 +282,7 @@ var processcommand = command => {
       logprogress('  !reset -> forget conversation')
       logprogress('  !down[upload] <filename> -> download script from botlibre')
       logprogress('  !up[load] <filename> -> upload script to botlibre')
+      logprogress('  !all down -> download all scripts at once from botlibre')
       logprogress('  !delete <scriptname> -> delete script with given name at botlibre')
       logprogress('  !prio[rity] up|down scriptname -> move script up/down in list at botlibre')
       break;
